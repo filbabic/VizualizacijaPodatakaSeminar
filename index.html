@@ -38,11 +38,11 @@
     }
 
     const random = (max) => Math.floor(Math.random() * max + 1)
-    const selectedDie = "d20" // TODO once this has been integrated into the web page, add interaction
+    const selectedDie = "d6" // TODO once this has been integrated into the web page, add interaction
     const numberOfDice = 150 // TODO ^
-    const numberOfAttempts = 10
+    const numberOfAttempts = 20
 
-    const showingPerDice = true
+    const showingPerDice = false
 
     const margin = 80
     const width = 1200 - 2 * margin
@@ -62,6 +62,27 @@
     const maxValue = numberOfDice * selectedDieData.max
     const averageValue = numberOfDice * selectedDieData.average
 
+    const rollsPerResult = [...Array(selectedDieData.max).keys()].map(key => {
+        return {
+            'key': key + 1,
+            'value': 0
+        }
+    })
+    console.log(rollsPerResult)
+
+    const allRolls = [...Array(numberOfDice).keys()].map(() => random(selectedDieData.max))
+    console.log(allRolls)
+    // rolled data per-dice
+    const rolledData = showingPerDice ?
+        rollsPerResult.map(element => {
+            element.value = allRolls.filter(value => value === element.key).length
+
+            return element
+        }).map(element => element.value) : // count each of the dice thrown
+        [...Array(numberOfAttempts).keys()].map(() => [...Array(numberOfDice).keys()].map(() => random(selectedDieData.max)).reduce((a, b) => a + b, 0))
+
+    console.log(rolledData)
+
     const xValues = showingPerDice ?
         [...Array(selectedDieData.max).keys()].map(value => value + 1) :
         [...Array(numberOfAttempts).keys()].map(value => value + 1 + ".")
@@ -70,9 +91,16 @@
         .range([0, width])
         .domain(xValues)
 
+    const maxYDomain = Math.max(...rolledData)
+    console.log(maxYDomain)
+
+    const shouldAggregate = true
+
+    const maxYDomainValue = shouldAggregate ? maxYDomain : showingPerDice ? numberOfDice : maxValue
+
     const yScale = d3.scaleLinear()
         .range([height, 0])
-        .domain([showingPerDice ? 0 : numberOfDice, showingPerDice ? numberOfDice : maxValue])
+        .domain([showingPerDice ? 0 : numberOfDice, maxYDomainValue])
 
     const makeYLines = () => d3.axisLeft()
         .scale(yScale)
@@ -107,19 +135,20 @@
         .attr('text-anchor', 'middle')
         .text(showingPerDice ? 'Rolled options statistics' : 'Roll total per attempt')
 
-    // rolled data per-dice
-    const rolledData = showingPerDice ?
-        [...Array(numberOfDice).keys()].map(() => random(selectedDieData.max)) :
-        [] // todo
+    const itemWidth = width / rolledData.length
+    console.log(rolledData.length)
 
     console.log(rolledData)
-
-    // TODO draw the rects for each of the rolled values
-    
-
+    svg.selectAll("rect")
+        .data(rolledData)
+        .enter()
+        .append("rect")
+        .attr("x", (d, i) => (i * itemWidth) + 82) // answerToAll -> start shift
+        .attr("y", (d) => yScale(d) + margin)
+        .attr("width", itemWidth - 5)
+        .attr("height", (d) => height - yScale(d))
+        .attr("fill", "#CCCCCC");
 
 </script>
-
-
 </body>
 </html>
