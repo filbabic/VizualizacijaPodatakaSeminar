@@ -38,13 +38,14 @@
     }
 
     const random = (max) => Math.floor(Math.random() * max + 1)
-    const selectedDie = "d6" // TODO once this has been integrated into the web page, add interaction
-    const numberOfDice = 150 // TODO ^
+    const selectedDie = "d20" // TODO once this has been integrated into the web page, add interaction
+    const numberOfDice = 100 // TODO ^
     const numberOfAttempts = 20
 
-    const showingPerDice = false
+    const showingPerDice = true
+    const shouldAggregate = true
 
-    const margin = 80
+    const margin = 82
     const width = 1200 - 2 * margin
     const height = 800 - 2 * margin
 
@@ -60,7 +61,6 @@
 
     const selectedDieData = dice[selectedDie]
     const maxValue = numberOfDice * selectedDieData.max
-    const averageValue = numberOfDice * selectedDieData.average
 
     const rollsPerResult = [...Array(selectedDieData.max).keys()].map(key => {
         return {
@@ -81,7 +81,7 @@
         }).map(element => element.value) : // count each of the dice thrown
         [...Array(numberOfAttempts).keys()].map(() => [...Array(numberOfDice).keys()].map(() => random(selectedDieData.max)).reduce((a, b) => a + b, 0))
 
-    console.log(rolledData)
+    const averageValue = showingPerDice ? numberOfDice / selectedDieData.max : numberOfDice * selectedDieData.average
 
     const xValues = showingPerDice ?
         [...Array(selectedDieData.max).keys()].map(value => value + 1) :
@@ -94,16 +94,12 @@
     const maxYDomain = Math.max(...rolledData)
     console.log(maxYDomain)
 
-    const shouldAggregate = true
 
     const maxYDomainValue = shouldAggregate ? maxYDomain : showingPerDice ? numberOfDice : maxValue
 
     const yScale = d3.scaleLinear()
         .range([height, 0])
         .domain([showingPerDice ? 0 : numberOfDice, maxYDomainValue])
-
-    const makeYLines = () => d3.axisLeft()
-        .scale(yScale)
 
     chart.append('g')
         .attr("class", "x axis")
@@ -138,16 +134,37 @@
     const itemWidth = width / rolledData.length
     console.log(rolledData.length)
 
+    const tooltip = svg
+        .append("text")
+        .style("visibility", "visible")
+        .attr('class', 'tooltip')
+
     console.log(rolledData)
     svg.selectAll("rect")
         .data(rolledData)
         .enter()
         .append("rect")
-        .attr("x", (d, i) => (i * itemWidth) + 82) // answerToAll -> start shift
+        .attr("x", (d, i) => (i * itemWidth) + margin + 5)
         .attr("y", (d) => yScale(d) + margin)
         .attr("width", itemWidth - 5)
         .attr("height", (d) => height - yScale(d))
-        .attr("fill", "#CCCCCC");
+        .attr("fill", (d) => d > averageValue ? "lightgreen" : "tomato")
+        .on("mouseover", function (d) {
+            return tooltip
+                .style("visibility", "visible")
+                .html(d)
+        }).on("mousemove", function (d, i) {
+        return d3.select(".tooltip")
+            .attr("x", (i * itemWidth) + margin + (itemWidth / 2) - tooltip.node().getBoundingClientRect().width / 2)
+            .attr("y", yScale(d) + margin - 10)
+    }).on("mouseout", () => tooltip.style("visibility", "hidden"))
+
+    svg.append("line")
+        .attr("x1", 0)
+        .attr("y1", yScale(averageValue))
+        .attr("x2", 100)
+        .attr("y2", yScale(averageValue))
+        .attr("fill", "red")
 
 </script>
 </body>
