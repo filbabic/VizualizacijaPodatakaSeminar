@@ -158,14 +158,6 @@
             .attr("x", (i * itemWidth) + margin + (itemWidth / 2) - tooltip.node().getBoundingClientRect().width / 2)
             .attr("y", yScale(d) + margin - 10)
     }).on("mouseout", () => tooltip.style("visibility", "hidden"))
-
-    svg.append("line")
-        .attr("x1", 0)
-        .attr("y1", yScale(averageValue))
-        .attr("x2", 100)
-        .attr("y2", yScale(averageValue))
-        .attr("fill", "red")
-
 </script>
 </body>
 </html>
