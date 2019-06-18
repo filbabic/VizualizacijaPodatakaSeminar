@@ -38,12 +38,12 @@
     }
 
     const random = (max) => Math.floor(Math.random() * max + 1)
-    const selectedDie = "d20" // TODO once this has been integrated into the web page, add interaction
-    const numberOfDice = 100 // TODO ^
+    const selectedDie = "d20"
+    const numberOfDice = 1000
     const numberOfAttempts = 20
 
     const showingPerDice = true
-    const shouldAggregate = true
+    const shouldAggregate = false
 
     rollAndDraw(showingPerDice, shouldAggregate, selectedDie, numberOfDice, numberOfAttempts)
 
@@ -153,7 +153,14 @@
             .attr("y", (d) => yScale(d) + margin)
             .attr("width", itemWidth - 5)
             .attr("height", (d) => height - yScale(d))
-            .attr("fill", (d) => d > averageValue ? "lightgreen" : "tomato")
+            .attr("fill", (d) => {
+                const isAverage = d === averageValue
+
+                if(isAverage) return "lightblue"
+
+                else return d > averageValue ? "lightgreen" : "tomato"
+
+            })
             .on("mouseover", function (d) {
                 return tooltip
                     .style("visibility", "visible")
@@ -164,13 +171,19 @@
                 .attr("y", yScale(d) + margin - 10)
         }).on("mouseout", () => tooltip.style("visibility", "hidden"))
 
-        var averageLine = chart.append("line")
-            .attr("x1", 0)
-            .attr("y1", yScale(averageValue))
-            .attr("x2", width)
-            .attr("y2", yScale(averageValue))
+        svg.append("line")
+            .attr("x1", margin + 5)
+            .attr("y1", margin + yScale(averageValue))
+            .attr("x2", width + margin)
+            .attr("y2", yScale(averageValue) + margin)
+            .attr("z-index", 100)
             .attr("stroke-width", 2)
-            .attr("stroke", "lightblue");
+            .attr("stroke", "black")
+
+        svg.append("text")
+            .attr("x", width + margin + 10)
+            .attr("y", yScale(averageValue) + margin + 3)
+            .html(() => averageValue)
     }
 </script>
 </body>
